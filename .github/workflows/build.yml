@@ -3,8 +3,12 @@ name: build
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -51,3 +55,23 @@ jobs:
         with:
           name: carvpn-debug-apk
           path: app/build/outputs/apk/debug/*.apk
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk "carvpn-${GITHUB_REF_NAME}.apk"
+          gh release create "${GITHUB_REF_NAME}" "carvpn-${GITHUB_REF_NAME}.apk" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "CarVPN ${GITHUB_REF_NAME}" \
+            --notes "适用于 Android 车机的按应用 VPN 客户端（armeabi-v7a，Android 5.0+，实机验证 Android 6.0）。
+
+          - 订阅导入（Clash，仅 type: http，支持 tls: true）
+          - 多节点管理 + 自动选择最快可用节点（TLS 握手 + CONNECT 200 探活）
+          - 按应用白名单、隧道内 DNS、故障切换
+          - TLS 上游适配器，代理链路上的载荷全程加密
+
+          安装：下载 APK 直接安装。本包由 GitHub Actions 从标签 ${GITHUB_REF_NAME} 自动构建（debug 签名）。
+
+          注意：仅支持 armeabi-v7a；除 DNS 外不转发 UDP；targetSdk 23。"
