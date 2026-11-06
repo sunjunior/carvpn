@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="订阅链接（Clash / 通用订阅）"/>
+        <EditText android:id="@+id/subUrl" android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="https://..."
+            android:inputType="textUri" android:singleLine="true"/>
+        <Button android:id="@+id/importSub" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:text="导入订阅"/>
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="节点（导入后自动填充）"/>
+        <Spinner android:id="@+id/nodeList"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:minHeight="40dp"/>
+        <CheckBox android:id="@+id/autoSelect"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="自动选择最快可用节点（勾选时测速选路）"/>
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="当前节点参数"/>
+        <EditText android:id="@+id/host" android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="服务器地址 (ip/域名)"
+            android:inputType="textUri" android:singleLine="true"/>
+        <EditText android:id="@+id/port" android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="端口"
+            android:inputType="number" android:singleLine="true"/>
+        <EditText android:id="@+id/user" android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="用户名（无认证可留空）"
+            android:singleLine="true"/>
+        <EditText android:id="@+id/pass" android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="密码（无认证可留空）"
+            android:inputType="textPassword" android:singleLine="true"/>
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="分流白名单包名（逗号/空格分隔）"/>
+        <EditText android:id="@+id/pkgs" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:minLines="2"
+            android:gravity="top"
+            android:hint="例：com.tencent.qqmusiccar"
+            android:inputType="textNoSuggestions|textMultiLine"/>
+
+        <Button android:id="@+id/toggle" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="12dp"
+            android:text="启动代理"/>
+
+        <LinearLayout android:orientation="horizontal"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="4dp">
+            <Button android:id="@+id/toBack" android:layout_width="0dp" android:layout_weight="1"
+                android:layout_height="wrap_content" android:text="退出到后台"/>
+            <Button android:id="@+id/exitApp" android:layout_width="0dp" android:layout_weight="1"
+                android:layout_height="wrap_content" android:text="完全退出程序"/>
+        </LinearLayout>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="4dp" android:textSize="12sp"
+            android:text="退出到后台：代理继续运行（通知栏可控）；完全退出：停止代理并结束进程"/>
+        <TextView android:id="@+id/status" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="8dp"
+            android:text="停止"/>
+    </LinearLayout>
+</ScrollView>

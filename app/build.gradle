@@ -1,0 +1,34 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'com.sunjunior.caresimvpn'
+    compileSdk 34
+    ndkVersion '26.3.11579264'
+    defaultConfig {
+        applicationId 'com.sunjunior.caresimvpn'
+        minSdk 21
+        targetSdk 23
+        versionCode 2
+        versionName '0.2.0'
+        ndk { abiFilters 'armeabi-v7a' }
+    }
+    buildTypes { release { minifyEnabled false } }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    externalNativeBuild {
+        ndkBuild {
+            path 'src/main/jni/Android.mk'
+        }
+    }
+    lint { abortOnError false }
+
+    sourceSets {
+        main {
+            jniLibs.srcDirs += ['src/main/jniLibs']
+        }
+    }
+}
+
+dependencies { testImplementation 'junit:junit:4.13.2' }
