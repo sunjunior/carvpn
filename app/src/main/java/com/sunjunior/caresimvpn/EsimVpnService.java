@@ -42,6 +42,9 @@ public class EsimVpnService extends VpnService {
     private volatile long lastFailoverAt = 0;
     private volatile int refusedCount = 0;
     private volatile long refusedWindow = 0;
+    /** 当前 relay/适配器绑定的出口网络句柄（0 = 未指定） */
+    private volatile long upstreamNetHandle = 0;
+    private volatile long lastUpstreamSwitchAt = 0;
 
     private ParcelFileDescriptor tun;
     private File config;
@@ -84,8 +87,8 @@ public class EsimVpnService extends VpnService {
             if (destroyed) { starting = false; return; }
             stopAllLocked();
 
-            /* 探活 socket 也要走 eth0，否则会被自己的 VPN 套住导致误判 */
-            NodeProbe.bindNetwork = eth0Network();
+            /* 探活 socket 也要绑定到真实上网网络（WiFi/eth0），否则会被自己的 VPN 套住 */
+            NodeProbe.bindNetwork = upstreamNetwork();
             NodeProbe.appContext = this;
 
             List<NodeStore.Node> nodes = NodeStore.loadOrMigrate(this);
@@ -179,42 +182,35 @@ public class EsimVpnService extends VpnService {
         return nodes.get(idx);
     }
 
-    /** 取以太网(eth0)网络句柄，供 relay 绑定，避免其上游连接被自己的 VPN 套住形成回环。 */
-    private Network eth0Network() {
-        try {
-            if (Build.VERSION.SDK_INT < 23) return null;
-            ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-            if (cm == null) return null;
-            Network[] nets = cm.getAllNetworks();
-            for (Network net : nets) {
-                NetworkCapabilities cap = cm.getNetworkCapabilities(net);
-                if (cap != null && cap.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
-                    return net;
-                }
-            }
-        } catch (Throwable t) {
-            Log.w(TAG, "eth0 network failed: " + t);
-        }
-        return null;
+    /**
+     * 选择出口网络：有 WiFi 走 WiFi，没有则走 eth0（详见 {@link UpstreamNet}）。
+     * relay / TLS 适配器 / 探活 socket 都绑定到它，避免被自己的 VPN 套住形成回环。
+     */
+    private Network upstreamNetwork() {
+        if (Build.VERSION.SDK_INT < 23) return null;
+        Network net = UpstreamNet.pick(this);
+        if (net == null) Log.w(TAG, "no upstream network (wifi/eth0) available");
+        return net;
     }
 
-    private String eth0Handle() {
+    private String upstreamHandle() {
         try {
-            Network net = eth0Network();
+            Network net = upstreamNetwork();
             if (net != null) {
                 long h = net.getNetworkHandle();
-                Log.i(TAG, "eth0 handle=" + h);
+                upstreamNetHandle = h;
+                Log.i(TAG, "upstream network: " + UpstreamNet.typeOf(this, net) + " handle=" + h);
                 return String.valueOf(h);
             }
         } catch (Throwable t) {
-            Log.w(TAG, "eth0 handle failed: " + t);
+            Log.w(TAG, "upstream handle failed: " + t);
         }
         return "0";
     }
 
     /**
      * 拉起本地 relay（socks5 前端 + dnsu2t），hev-tunnel 的上游指向 127.0.0.1:8101。
-     * 参数：port / up_host / up_port / up_user / up_pass / resolver / eth0_net_handle。
+     * 参数：port / up_host / up_port / up_user / up_pass / resolver / upstream_net_handle。
      */
     private boolean startRelay(NodeStore.Node n) {
         try {
@@ -231,7 +227,7 @@ public class EsimVpnService extends VpnService {
             int upPort = n.port;
             if (n.tls) {
                 try {
-                    tlsUp = new TlsUpstream(this, eth0Network(), n.host, n.port);
+                    tlsUp = new TlsUpstream(this, upstreamNetwork(), n.host, n.port);
                     upPort = tlsUp.start();
                     upHost = "127.0.0.1";
                     Log.i(TAG, "tls upstream ready: 127.0.0.1:" + upPort + " -> " + n.host + ":" + n.port);
@@ -245,7 +241,7 @@ public class EsimVpnService extends VpnService {
             cmd.add(n.username == null ? "" : n.username);
             cmd.add(n.password == null ? "" : n.password);
             cmd.add("114.114.114.114,223.5.5.5,8.8.8.8");
-            cmd.add(eth0Handle());
+            cmd.add(upstreamHandle());
             ProcessBuilder pb = new ProcessBuilder(cmd);
             pb.redirectErrorStream(true);
             relay = pb.start();
@@ -309,6 +305,21 @@ public class EsimVpnService extends VpnService {
                 while (!destroyed && running) {
                     try { Thread.sleep(20000); } catch (InterruptedException e) { return; }
                     if (destroyed || !running) return;
+
+                    /* 出口变化（WiFi 接入/断开）时重新绑定，避免继续走失效的旧网络 */
+                    long now = System.currentTimeMillis();
+                    if (now - lastUpstreamSwitchAt > 30000) {
+                        Network want = UpstreamNet.pick(EsimVpnService.this);
+                        long wantH = want == null ? 0 : want.getNetworkHandle();
+                        if (wantH != 0 && wantH != upstreamNetHandle) {
+                            lastUpstreamSwitchAt = now;
+                            Log.i(TAG, "upstream changed " + upstreamNetHandle + " -> " + wantH
+                                    + " (" + UpstreamNet.typeOf(EsimVpnService.this, want) + "), rebinding");
+                            startInternal(cur);
+                            return;
+                        }
+                    }
+
                     long ms = NodeProbe.tcpLatency(cur.host, cur.port, 3000);
                     if (ms > 0) { fails = 0; continue; }
                     if (++fails < 2) continue;

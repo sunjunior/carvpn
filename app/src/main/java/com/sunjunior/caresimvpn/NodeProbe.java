@@ -20,14 +20,14 @@ import javax.net.ssl.SSLSocket;
 final class NodeProbe {
     private static final String PROBE_TARGET = "qq.com:80";
 
-    /** 由 EsimVpnService 注入：探活 socket 绑定到 eth0，避免被自身 VPN 套住 */
+    /** 由 EsimVpnService 注入：探活 socket 绑定到真实出口网络（WiFi/eth0），避免被自身 VPN 套住 */
     static volatile Network bindNetwork;
     /** 由 EsimVpnService 注入：TLS 握手需要证书上下文 */
     static volatile Context appContext;
 
     private NodeProbe() {}
 
-    private static void bindEth0(Socket s) {
+    private static void bindUpstream(Socket s) {
         Network n = bindNetwork;
         if (n == null) return;
         try {
@@ -41,7 +41,7 @@ final class NodeProbe {
         long t0 = System.currentTimeMillis();
         Socket s = new Socket();
         try {
-            bindEth0(s);
+            bindUpstream(s);
             s.connect(new InetSocketAddress(host.trim(), port), timeoutMs);
             return System.currentTimeMillis() - t0;
         } catch (Exception e) {
@@ -58,7 +58,7 @@ final class NodeProbe {
         Socket s = new Socket();
         SSLSocket tls = null;
         try {
-            bindEth0(s);
+            bindUpstream(s);
             s.connect(new InetSocketAddress(n.host.trim(), n.port), timeoutMs);
             int remain = remainingMs(t0, timeoutMs);
             if (remain <= 0) return -1;

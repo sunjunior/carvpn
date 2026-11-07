@@ -889,9 +889,9 @@ int main(int argc, char **argv)
         g_net = (net_handle_t)strtoull(argv[7], NULL, 10);
         if (g_net && android_setprocnetwork) {
             int rc = android_setprocnetwork(g_net);
-            logi("bind eth0: handle=%llu rc=%d", (unsigned long long)g_net, rc);
+            logi("bind upstream: handle=%llu rc=%d", (unsigned long long)g_net, rc);
         } else if (g_net) {
-            logi("bind eth0: android_setprocnetwork unavailable");
+            logi("bind upstream: android_setprocnetwork unavailable");
         }
     }
 

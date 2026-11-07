@@ -8,8 +8,8 @@ android {
         applicationId 'com.sunjunior.caresimvpn'
         minSdk 21
         targetSdk 23
-        versionCode 1
-        versionName '0.1.0'
+        versionCode 2
+        versionName '0.2.0'
         ndk { abiFilters 'armeabi-v7a' }
     }
     buildTypes { release { minifyEnabled false } }

@@ -13,7 +13,7 @@ import java.util.List;
 final class SubImporter {
     private SubImporter() {}
 
-    /** 通过指定网络（eth0）拉取订阅，避免被自身 VPN 套住。 */
+    /** 通过指定出口网络（WiFi/eth0）拉取订阅，避免被自身 VPN 套住。 */
     static String fetch(String url, Network net, int timeoutMs, android.content.Context ctx) throws IOException {
         return HttpFetcher.get(url, net, timeoutMs, ctx);
     }

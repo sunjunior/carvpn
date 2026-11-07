@@ -23,7 +23,7 @@ import javax.net.ssl.SSLSocket;
  * TLS(节点，SNI=节点域名) → 转发 CONNECT → 双向透传。
  *
  * <p>外层 TLS 同时起到加密隧道的作用，链路上的 DPI 看不到内层 SNI。
- * 节点连接必须绑定到 eth0 网络，否则会被自己的 tun 套住形成回环。
+ * 节点连接必须绑定到真实出口网络（WiFi/eth0），否则会被自己的 tun 套住形成回环。
  */
 final class TlsUpstream {
     private static final String TAG = "carvpn";
@@ -111,7 +111,7 @@ final class TlsUpstream {
         byte[] req = readHeaders(cin, 8192);
         if (req == null) return;
 
-        /* 2) TLS 连节点；socket 先绑 eth0，再建连，最后套 TLS（带 SNI） */
+        /* 2) TLS 连节点；socket 先绑出口网络，再建连，最后套 TLS（带 SNI） */
         Socket raw = new Socket();
         try {
             if (net != null) net.bindSocket(raw);

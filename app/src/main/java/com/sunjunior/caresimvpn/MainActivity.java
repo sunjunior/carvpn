@@ -2,9 +2,7 @@ package com.sunjunior.caresimvpn;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.net.ConnectivityManager;
 import android.net.Network;
-import android.net.NetworkCapabilities;
 import android.net.VpnService;
 import android.os.Bundle;
 import android.os.Handler;
@@ -195,24 +193,16 @@ public class MainActivity extends Activity {
 
     /* ---------- 订阅导入 ---------- */
 
-    private Network eth0() {
-        try {
-            ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-            if (cm == null) return null;
-            Network[] nets = cm.getAllNetworks();
-            for (Network n : nets) {
-                NetworkCapabilities c = cm.getNetworkCapabilities(n);
-                if (c != null && c.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) return n;
-            }
-        } catch (Throwable ignored) { }
-        return null;
+    /** 出口网络：优先 WiFi，其次 eth0（见 {@link UpstreamNet}）。 */
+    private Network upstreamNetwork() {
+        return UpstreamNet.pick(this);
     }
 
     private void importSubscription() {
         final String url = subUrl.getText().toString().trim();
         if (url.isEmpty()) { toast("请先填写订阅链接"); return; }
 
-        final Network net = eth0();
+        final Network net = upstreamNetwork();
         importSub.setEnabled(false);
         status.setText("正在导入订阅…");
         android.util.Log.i("carvpn", "import start");
@@ -261,7 +251,7 @@ public class MainActivity extends Activity {
     private void pickFastestAsync() {
         if (nodes.isEmpty()) { toast("请先导入订阅"); return; }
         final List<NodeStore.Node> snapshot = new ArrayList<>(nodes);
-        NodeProbe.bindNetwork = eth0();
+        NodeProbe.bindNetwork = upstreamNetwork();
         /* 首次安装、服务尚未启动时也要能探活 TLS 节点 */
         NodeProbe.appContext = getApplicationContext();
         status.setText("正在测速（" + snapshot.size() + " 个节点）…");

@@ -4,7 +4,7 @@
 
 在别克英朗车机（AC8317 / MT6735 / Android 6.0 / armeabi-v7a）上实机验证，用于让 QQ 音乐等应用通过代理正常联网。
 
-- **版本**：0.1.0（versionCode 1）
+- **版本**：0.2.0（versionCode 2）
 - **最低系统**：Android 5.0（API 21），实机验证 Android 6.0（API 23）
 - **ABI**：仅 `armeabi-v7a`
 - **依赖**：[hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel)（构建时拉取，不随仓库分发）
@@ -13,7 +13,7 @@
 
 ## 下载
 
-编译好的 APK 发布在 [Releases](https://github.com/sunjunior/carvpn/releases) 页面，当前版本 [v0.1](https://github.com/sunjunior/carvpn/releases/tag/v0.1)。安装包由 GitHub Actions 在打标签时自动构建。
+编译好的 APK 发布在 [Releases](https://github.com/sunjunior/carvpn/releases) 页面，当前版本 [v0.2](https://github.com/sunjunior/carvpn/releases/tag/v0.2)。安装包由 GitHub Actions 在打标签时自动构建。
 
 ## 功能
 
@@ -22,6 +22,7 @@
 - **自动选路**：TCP 预筛 + 分批「TLS 握手 + CONNECT 200」完整探活，按时延选最快可用节点
 - **故障切换**：运行期看门狗检测节点健康，连续失败自动切换；上游连续拒绝也会触发切换
 - **按应用代理**：只代理白名单包名，其余应用不受影响
+- **出口网络自适应**：有 WiFi 走 WiFi，没有 WiFi 走 eth0；relay、TLS 适配器、探活统一绑定同一出口
 - **隧道内 DNS**：UDP/53 转 DNS-over-TCP 经节点转发，带污染检测与多解析器回退
 - **加密上游**：`tls: true` 节点由本地 TLS 适配器终结外层 TLS，链路上看不到内层 SNI
 
@@ -50,7 +51,7 @@ hev-socks5-tunnel  ──  SOCKS5  ──▶  127.0.0.1:8101 (native relay)
 
 关键点：
 
-- **relay 与探活 socket 必须绑定 eth0**：ROM 的 VPN 是全局的（无 uidrange），不绑定会把上游连接套进自己的 tun，形成回环。
+- **relay 与探活 socket 必须绑定真实出口**：ROM 的 VPN 是全局的（无 uidrange），不绑定会把上游连接套进自己的 tun，形成回环。出口选择顺序为 WiFi → eth0 → 蜂窝 → 其它可用网络（优先系统验证过的网络）。
 - **`tls: true` 节点走 `TlsUpstream`**：relay 只会说明文 CONNECT，而订阅节点是 HTTPS 代理。适配器监听 `127.0.0.1:<临时端口>`，对节点做 TLS（SNI=节点域名）后转发 CONNECT，再双向透传。
 - **DNS 不直连**：tun 内的 DNS 请求由 relay 通过 `CONNECT resolver:53` 转成 DNS-over-TCP，避免 UDP 被链路丢弃，并对 `198.18.0.0/15`、`0.0.0.0` 等污染结果换解析器重试。
 - **配置固定单文件**：`cache/hev_current.yml` 每次启动覆盖，启动/退出都会清理历史文件，不会随启动次数增长。
@@ -182,4 +183,6 @@ adb shell dumpsys connectivity | grep -i vpn
 
 ## 许可
 
-本仓库暂未附带开源许可证文件。如需公开发布，请先补充许可证；注意 `hev-socks5-tunnel` 采用 MIT 协议，分发二进制时需保留其版权与许可声明。
+本项目采用 **GNU General Public License v3.0（GPLv3）**，完整条款见 [LICENSE](LICENSE)。
+
+第三方组件 `hev-socks5-tunnel` 采用 MIT 协议，与 GPLv3 兼容；分发包含该组件的二进制时，需保留其版权与许可声明（见 [docs/VENDORED.md](docs/VENDORED.md)）。
