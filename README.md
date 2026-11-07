@@ -4,7 +4,7 @@
 
 在别克英朗车机（AC8317 / MT6735 / Android 6.0 / armeabi-v7a）上实机验证，用于让 QQ 音乐等应用通过代理正常联网。
 
-- **版本**：0.3.0（versionCode 3）
+- **版本**：0.2.0（versionCode 2）
 - **最低系统**：Android 5.0（API 21），实机验证 Android 6.0（API 23）
 - **ABI**：仅 `armeabi-v7a`
 - **依赖**：[hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel)（源码包随仓库分发，构建时解压）
@@ -13,7 +13,7 @@
 
 ## 下载
 
-编译好的 APK 发布在 [Releases](https://github.com/sunjunior/carvpn/releases) 页面，当前版本 [v0.3](https://github.com/sunjunior/carvpn/releases/tag/v0.3)。安装包由 GitHub Actions 在打标签时自动构建。
+编译好的 APK 发布在 [Releases](https://github.com/sunjunior/carvpn/releases) 页面，当前版本 [v0.2](https://github.com/sunjunior/carvpn/releases/tag/v0.2)。安装包由 GitHub Actions 在打标签时自动构建。
 
 ## 功能
 
