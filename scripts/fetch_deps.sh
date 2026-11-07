@@ -1,33 +1,27 @@
 #!/usr/bin/env bash
-# Vendor hev-socks5-tunnel and its submodules at a pinned commit.
-# The directory is git-ignored; the pinned SHA is documented in docs/VENDORED.md.
+# Unpack the vendored hev-socks5-tunnel source tree.
+#
+# The dependency is shipped as a tarball under third_party/ so builds do not
+# depend on the upstream repository history (upstream has rewritten history,
+# which makes pinned commit SHAs unreadable). See docs/VENDORED.md.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+
 DEST=app/src/main/cpp/hev-socks5-tunnel
-SHA="${HEV_SHA:-0c6885060c27134d1bf6a26b1132b6c90f80e4a4}"
+TARBALL=third_party/hev-socks5-tunnel-0c68850.tar.gz
 
-clone_with_retry() {
-  local i
-  for i in 1 2 3; do
-    rm -rf "$DEST"
-    if git clone --quiet https://github.com/heiher/hev-socks5-tunnel "$DEST"; then
-      return 0
-    fi
-    echo "clone failed (attempt $i/3), retrying..." >&2
-    sleep 10
-  done
-  return 1
-}
+if [ ! -f "$TARBALL" ]; then
+  echo "missing $TARBALL" >&2
+  exit 1
+fi
 
-clone_with_retry
+rm -rf "$DEST"
+mkdir -p app/src/main/cpp
+tar -xzf "$TARBALL" -C app/src/main/cpp
 
-git -C "$DEST" checkout -q "$SHA"
-for i in 1 2 3; do
-  if git -C "$DEST" submodule update --init --recursive --quiet; then
-    break
-  fi
-  echo "submodule update failed (attempt $i/3), retrying..." >&2
-  sleep 10
-done
+if [ ! -f "$DEST/src/hev-jni.c" ]; then
+  echo "unexpected tarball layout: $DEST/src/hev-jni.c not found" >&2
+  exit 1
+fi
 
-echo "hev-socks5-tunnel pinned $(git -C "$DEST" rev-parse HEAD)"
+echo "hev-socks5-tunnel unpacked from $TARBALL"

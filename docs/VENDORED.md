@@ -1,8 +1,10 @@
 # vendored: hev-socks5-tunnel
 
-- 本地锚定 SHA：`0c6885060c27134d1bf6a26b1132b6c90f80e4a4`（克隆时间 2026-11-04）
-- 拉取脚本：`scripts/fetch_deps.sh`（`--recursive`，含子模块：hev-task-system / heiher-yaml / lwip / src/core=hev-socks5-core；`HEV_REF` 可钉 tag）
-- 位置：`app/src/main/cpp/hev-socks5-tunnel/`（gitignore，不入库）
+- 源码包：`third_party/hev-socks5-tunnel-0c68850.tar.gz`（0.94 MB，内置全部子模块）
+- 对应上游版本：`0c6885060c27134d1bf6a26b1132b6c90f80e4a4`（2026-11-03，含 lwip 8115cd6）
+- SHA256：`AEF4C3ABB9614C17BE3A758260F4B40FD557A33A99C16D59871C18E0101CF10E`
+- 解包脚本：`scripts/fetch_deps.sh`，解压到 `app/src/main/cpp/hev-socks5-tunnel/`（该目录 gitignore，不入库）
+- 为什么用压缩包而不是 clone：上游重写历史后，旧 commit 的对象已不可读（`fatal: unable to read tree`），固定 SHA 无法稳定复现；压缩包保证 CI 与本地构建一致
 
 ## Q1 嵌入接口定案（上游官方 JNI 存在，弃用自研 wrapper）
 

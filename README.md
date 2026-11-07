@@ -7,7 +7,7 @@
 - **版本**：0.2.0（versionCode 2）
 - **最低系统**：Android 5.0（API 21），实机验证 Android 6.0（API 23）
 - **ABI**：仅 `armeabi-v7a`
-- **依赖**：[hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel)（构建时拉取，不随仓库分发）
+- **依赖**：[hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel)（源码包随仓库分发，构建时解压）
 
 > 仓库内不包含任何订阅链接、节点地址、账号密码或签名密钥；节点数据只保存在车机应用私有目录中。
 
@@ -81,7 +81,7 @@ hev-socks5-tunnel  ──  SOCKS5  ──▶  127.0.0.1:8101 (native relay)
 │       └── test/                            # JVM 单元测试
 ├── docs/                                    # 设计、依赖说明、历史探针记录
 ├── scripts/
-│   ├── fetch_deps.sh                        # 拉取并锁定 hev-socks5-tunnel
+│   ├── fetch_deps.sh                        # 解压内置的 hev-socks5-tunnel 源码包
 │   └── build-release.{sh,bat}               # release 构建 + 签名
 ├── gradlew / gradlew.bat                    # Gradle Wrapper 8.9
 └── .github/workflows/build.yml              # CI：单测 + debug APK
@@ -96,13 +96,13 @@ hev-socks5-tunnel  ──  SOCKS5  ──▶  127.0.0.1:8101 (native relay)
 - NDK：`26.3.11579264`
 - 环境变量：`ANDROID_HOME`（或 `ANDROID_SDK_ROOT`）
 
-### 拉取原生依赖
+### 解压原生依赖
 
 ```bash
 ./scripts/fetch_deps.sh
 ```
 
-脚本会 clone `hev-socks5-tunnel` 到 `app/src/main/cpp/`（已被 `.gitignore` 忽略），并检出固定 commit，版本记录见 [docs/VENDORED.md](docs/VENDORED.md)。
+脚本会把 `third_party/hev-socks5-tunnel-0c68850.tar.gz` 解压到 `app/src/main/cpp/`（该目录已被 `.gitignore` 忽略）。不再依赖上游仓库，版本与 SHA256 见 [docs/VENDORED.md](docs/VENDORED.md)。
 
 ### 单元测试与 Debug 构建
 
@@ -169,7 +169,7 @@ adb shell dumpsys connectivity | grep -i vpn
 - 订阅链接、节点账号密码只保存在应用私有 `SharedPreferences`（`node_store`），不会写入源码或日志。
 - `res/raw/extra_roots.pem` 仅包含公共根证书（补齐 Android 6 缺失的 ISRG Root），不含私钥。
 - 发布用 keystore 放在仓库外，由构建脚本通过环境变量读取。
-- 原生依赖通过固定 commit 拉取，构建前可核对 [docs/VENDORED.md](docs/VENDORED.md) 中的 SHA。
+- 原生依赖以源码包形式随仓库分发，构建前可核对 [docs/VENDORED.md](docs/VENDORED.md) 中的 SHA256。
 
 ## 文档
 
